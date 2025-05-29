@@ -6,10 +6,20 @@ class Message(BaseModel):
 
 
 class UserSchema(BaseModel):
-    username : str
+    username: str
     email: EmailStr
-    password : str
+    password: str
+
 
 class UserPublic(BaseModel):
-    username : str
+    username: str
     email: EmailStr
+    id: int
+
+
+class UserDB(UserSchema):
+    id: int
+
+
+class UserList(BaseModel):
+    users: list[UserPublic]
