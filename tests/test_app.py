@@ -54,3 +54,69 @@ def test_read_users(client):
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == return_get
+
+
+def test_get_user(client):
+    response = client.get('/users/1')
+
+    expected_response = {
+        'id': 1,
+        'email': 'alice@paradiseword.com',
+        'username': 'alice'
+    }
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == expected_response
+
+    response_exception = client.get('/users/2')
+
+    expected_response = {'detail': 'Usuario não encontrado!'}
+
+    assert response_exception.status_code == HTTPStatus.NOT_FOUND
+    assert response_exception.json() == expected_response
+
+
+def test_put_users(client):
+    payload = {
+        'username': 'bob',
+        'email': 'bob@paradiseword.com',
+        'password': 'secret',
+    }
+
+    response = client.put('/users/1', json=payload)
+
+    expected_response = {
+        'id': 1,
+        'username': 'bob',
+        'email': 'bob@paradiseword.com',
+    }
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == expected_response
+
+    response_exception = client.put('/users/0', json=payload)
+
+    expected_response = {'detail': 'Usuario não encontrado!'}
+
+    assert response_exception.status_code == HTTPStatus.NOT_FOUND
+    assert response_exception.json() == expected_response
+
+
+def test_delete_user(client):
+    response = client.delete('/users/1')
+
+    expected_response = {
+        'id': 1,
+        'username': 'bob',
+        'email': 'bob@paradiseword.com',
+    }
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == expected_response
+
+    response_exception = client.delete('/users/2')
+
+    expected_response = {'detail': 'Usuario não encontrado!'}
+
+    assert response_exception.status_code == HTTPStatus.NOT_FOUND
+    assert response_exception.json() == expected_response
