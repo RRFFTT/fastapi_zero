@@ -62,7 +62,7 @@ def test_get_user(client):
     expected_response = {
         'id': 1,
         'email': 'alice@paradiseword.com',
-        'username': 'alice'
+        'username': 'alice',
     }
 
     assert response.status_code == HTTPStatus.OK
