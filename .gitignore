@@ -6,6 +6,8 @@
 ### project stuff
 database.db
 *~
+.idea
+.kateproject*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

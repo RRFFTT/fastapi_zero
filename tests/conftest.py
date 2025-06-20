@@ -9,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 
 from fastapi_zero.app import app
 from fastapi_zero.database import get_session
-from fastapi_zero.models import table_registry
+from fastapi_zero.models import User, table_registry
 
 
 @pytest.fixture
@@ -47,7 +47,7 @@ def _mock_db_time(*, model, time=datetime(2025, 1, 1)):
             target.created_at = time
 
         if hasattr(target, 'updated_at'):
-            target.update_at = time
+            target.updated_at = time
 
     event.listen(model, 'before_insert', fake_time_hook)
 
@@ -59,3 +59,13 @@ def _mock_db_time(*, model, time=datetime(2025, 1, 1)):
 @pytest.fixture
 def mock_db_time():
     return _mock_db_time
+
+
+@pytest.fixture
+def user(session):
+    user = User(username='Teste', email='teste@test.com', password='test123')
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    return user

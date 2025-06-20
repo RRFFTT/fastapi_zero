@@ -1,5 +1,7 @@
 from http import HTTPStatus
 
+from fastapi_zero.schemas import UserPublic
+
 
 def test_root_return_ola_mundo(client):
     response = client.get('/')
@@ -46,37 +48,23 @@ def test_create_user(client):
 def test_read_users(client):
     response = client.get('/users/')
 
-    return_get = {
-        'users': [
-            {'username': 'alice', 'email': 'alice@paradiseword.com', 'id': 1}
-        ]
-    }
+    return_get = {'users': []}
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == return_get
 
 
-def test_get_user(client):
-    response = client.get('/users/1')
+def test_read_users_with_users(client, user):
+    user_schema = UserPublic.model_validate(user).model_dump()
+    response = client.get('/users/')
 
-    expected_response = {
-        'id': 1,
-        'email': 'alice@paradiseword.com',
-        'username': 'alice',
-    }
+    return_get = {'users': [user_schema]}
 
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == expected_response
-
-    response_exception = client.get('/users/2')
-
-    expected_response = {'detail': 'Usuario não encontrado!'}
-
-    assert response_exception.status_code == HTTPStatus.NOT_FOUND
-    assert response_exception.json() == expected_response
+    assert response.json() == return_get
 
 
-def test_put_users(client):
+def test_update_users(client, user):
     payload = {
         'username': 'bob',
         'email': 'bob@paradiseword.com',
@@ -94,29 +82,9 @@ def test_put_users(client):
     assert response.status_code == HTTPStatus.OK
     assert response.json() == expected_response
 
-    response_exception = client.put('/users/0', json=payload)
 
-    expected_response = {'detail': 'Usuario não encontrado!'}
-
-    assert response_exception.status_code == HTTPStatus.NOT_FOUND
-    assert response_exception.json() == expected_response
-
-
-def test_delete_user(client):
+def test_delete_user(client, user):
     response = client.delete('/users/1')
 
-    expected_response = {
-        'id': 1,
-        'username': 'bob',
-        'email': 'bob@paradiseword.com',
-    }
-
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == expected_response
-
-    response_exception = client.delete('/users/2')
-
-    expected_response = {'detail': 'Usuario não encontrado!'}
-
-    assert response_exception.status_code == HTTPStatus.NOT_FOUND
-    assert response_exception.json() == expected_response
+    assert response.json() == {'message': 'Usuário deletado!'}

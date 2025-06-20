@@ -3,20 +3,12 @@ from http import HTTPStatus
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from fastapi_zero.database import get_session
 from fastapi_zero.models import User
-from fastapi_zero.schemas import (
-    Message,
-    UserDB,
-    UserList,
-    UserPublic,
-    UserSchema,
-)
+from fastapi_zero.schemas import Message, UserList, UserPublic, UserSchema
 
 app = FastAPI(title='My First API')
-database = []  # provisorio para estudos
 
 
 @app.get('/', status_code=HTTPStatus.OK, response_model=Message)
@@ -42,8 +34,7 @@ def htmlpage():
 
 
 @app.post('/users/', status_code=HTTPStatus.CREATED, response_model=UserPublic)
-def create_user(user: UserSchema, session= Depends(get_session)):
-
+def create_user(user: UserSchema, session=Depends(get_session)):
     db_user = session.scalar(
         select(User).where(
             (User.username == user.username) | (User.email == user.email)
@@ -72,11 +63,7 @@ def create_user(user: UserSchema, session= Depends(get_session)):
 
 
 @app.get('/users/', status_code=HTTPStatus.OK, response_model=UserList)
-def read_users(
-    limit: int = 10,
-    offset: int = 0,
-    session = Depends(get_session)):
-
+def read_users(limit: int = 10, offset: int = 0, session=Depends(get_session)):
     users = session.scalars(select(User).limit(limit).offset(offset))
 
     return {'users': users}
@@ -85,44 +72,50 @@ def read_users(
 @app.get(
     '/users/{user_id}', status_code=HTTPStatus.OK, response_model=UserPublic
 )
-def get_user(user_id: int):
-    if user_id < 1 or user_id > len(database):
+def get_user(user_id: int, session=Depends(get_session)):
+    user_db = session.scalar(select(User).where(User.id == user_id))
+
+    if not user_db:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Usuario não encontrado!'
+            detail='Usuário não encontrado!', status_code=HTTPStatus.NOT_FOUND
         )
-
-    user_with_id = database[user_id - 1]
-
-    return user_with_id
+    return {'users': user_db}
 
 
 @app.put(
     '/users/{user_id}', status_code=HTTPStatus.OK, response_model=UserPublic
 )
-def update_user(user_id: int, user: UserSchema):
-    user_with_id = UserDB(**user.model_dump(), id=len(database))
+def update_user(user_id: int, user: UserSchema, session=Depends(get_session)):
+    user_db = session.scalar(select(User).where(User.id == user_id))
 
-    if user_id < 1 or user_id > len(database):
+    if not user_db:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Usuario não encontrado!'
+            detail='Usuário não encontrado!', status_code=HTTPStatus.NOT_FOUND
         )
 
-    database[user_id - 1] = user_with_id
+    user_db.username = user.username
+    user_db.email = user.email
+    user_db.password = user.password
 
-    return user_with_id
+    session.add(user_db)
+    session.commit()
+    session.refresh(user_db)
+
+    return user_db
 
 
 @app.delete(
-    '/users/{user_id}', status_code=HTTPStatus.OK, response_model=UserPublic
+    '/users/{user_id}', status_code=HTTPStatus.OK, response_model=Message
 )
-def delete_users(user_id: int):
-    if user_id < 1 or user_id > len(database):
+def delete_users(user_id: int, session=Depends(get_session)):
+    user_db = session.scalar(select(User).where(User.id == user_id))
+
+    if not user_db:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Usuario não encontrado!'
+            detail='Usuario não encontrado!', status_code=HTTPStatus.NOT_FOUND
         )
 
-    user_with_id = database[user_id - 1]
+    session.delete(user_db)
+    session.commit()
 
-    del database[user_id - 1]
-
-    return user_with_id
+    return {'message': 'Usuário deletado!'}
