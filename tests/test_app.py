@@ -88,3 +88,32 @@ def test_delete_user(client, user):
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {'message': 'Usuário deletado!'}
+
+
+def test_update_integrity_erro(client, user):
+    # Inserindo fausto
+    client.post(
+        '/users',
+        json={
+            'username': 'fausto',
+            'email': 'fausto@example.com',
+            'password': 'secret',
+        },
+    )
+
+    # Alterando usuario user
+
+    response = client.put(
+        f'users/{user.id}',
+        json={
+            'username': 'fausto',
+            'email': 'teste@test.com',
+            'password': 'test123',
+        },
+    )
+
+    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.json() == {
+        'detail': 'Nome de usuário ou email já cadastrados!'
+    }
+    ...

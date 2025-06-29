@@ -3,6 +3,7 @@ from http import HTTPStatus
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from fastapi_zero.database import get_session
 from fastapi_zero.models import User
@@ -93,15 +94,21 @@ def update_user(user_id: int, user: UserSchema, session=Depends(get_session)):
             detail='Usuário não encontrado!', status_code=HTTPStatus.NOT_FOUND
         )
 
-    user_db.username = user.username
-    user_db.email = user.email
-    user_db.password = user.password
+    try:
+        user_db.username = user.username
+        user_db.email = user.email
+        user_db.password = user.password
 
-    session.add(user_db)
-    session.commit()
-    session.refresh(user_db)
+        session.add(user_db)
+        session.commit()
+        session.refresh(user_db)
 
-    return user_db
+        return user_db
+    except IntegrityError:
+        raise HTTPException(
+            detail='Nome de usuário ou email já cadastrados!',
+            status_code=HTTPStatus.CONFLICT,
+        )
 
 
 @app.delete(
