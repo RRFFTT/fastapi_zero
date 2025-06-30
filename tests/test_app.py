@@ -116,4 +116,69 @@ def test_update_integrity_erro(client, user):
     assert response.json() == {
         'detail': 'Nome de usuário ou email já cadastrados!'
     }
-    ...
+
+
+def test_create_username_integrity_erro(client, user):
+    response = client.post(
+        '/users/',
+        json={
+            'username': user.username,
+            'email': 'teste2@test.com',
+            'password': 'test123456',
+        },
+    )
+
+    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.json() == {'detail': 'Nome de usuario ja cadastrado!'}
+
+
+def test_create_mail_integrity_erro(client, user):
+    response = client.post(
+        '/users/',
+        json={
+            'username': 'Teste2',
+            'email': user.email,
+            'password': 'test123456',
+        },
+    )
+
+    assert response.status_code == HTTPStatus.CONFLICT
+    assert response.json() == {'detail': 'E-mail já cadastrado!'}
+
+
+def test_delete_user_should_return_not_found(client):
+    response = client.delete('/users/333')
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Usuário não encontrado!'}
+
+
+def test_update_user_should_return_not_found(client):
+    response = client.put(
+        '/users/333',
+        json={
+            'username': 'fausto',
+            'email': 'teste@test.com',
+            'password': 'test123',
+        },
+    )
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Usuário não encontrado!'}
+
+
+def test_get_user_should_return_not_found(client):
+    response = client.get('/users/333')
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'Usuário não encontrado!'}
+
+
+def test_get_user(client, user):
+    response = client.get(f'/users/{user.id}')
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {
+        'username': user.username,
+        'email': user.email,
+        'id': user.id,
+    }

@@ -45,13 +45,13 @@ def create_user(user: UserSchema, session=Depends(get_session)):
     if db_user:
         if db_user.username == user.username:
             raise HTTPException(
-                detail='Username already exists!',
+                detail='Nome de usuario ja cadastrado!',
                 status_code=HTTPStatus.CONFLICT,
             )
 
         elif db_user.email == user.email:
             raise HTTPException(
-                detail='Email already exists!', status_code=HTTPStatus.CONFLICT
+                detail='E-mail já cadastrado!', status_code=HTTPStatus.CONFLICT
             )
 
     db_user = User(**user.model_dump())
@@ -80,7 +80,14 @@ def get_user(user_id: int, session=Depends(get_session)):
         raise HTTPException(
             detail='Usuário não encontrado!', status_code=HTTPStatus.NOT_FOUND
         )
-    return {'users': user_db}
+
+    user = {
+        'username': user_db.username,
+        'email': user_db.email,
+        'id': user_db.id,
+    }
+
+    return user
 
 
 @app.put(
@@ -119,7 +126,7 @@ def delete_users(user_id: int, session=Depends(get_session)):
 
     if not user_db:
         raise HTTPException(
-            detail='Usuario não encontrado!', status_code=HTTPStatus.NOT_FOUND
+            detail='Usuário não encontrado!', status_code=HTTPStatus.NOT_FOUND
         )
 
     session.delete(user_db)
