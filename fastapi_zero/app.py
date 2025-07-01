@@ -2,12 +2,14 @@ from http import HTTPStatus
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from fastapi_zero.database import get_session
 from fastapi_zero.models import User
 from fastapi_zero.schemas import Message, UserList, UserPublic, UserSchema
+from fastapi_zero.security import get_password_hash
 
 app = FastAPI(title='My First API')
 
@@ -54,6 +56,7 @@ def create_user(user: UserSchema, session=Depends(get_session)):
                 detail='E-mail já cadastrado!', status_code=HTTPStatus.CONFLICT
             )
 
+    user.password = get_password_hash(user.password)
     db_user = User(**user.model_dump())
 
     session.add(db_user)
@@ -133,3 +136,10 @@ def delete_users(user_id: int, session=Depends(get_session)):
     session.commit()
 
     return {'message': 'Usuário deletado!'}
+
+
+@app.post('/token')
+def login_for_acess_token():
+    ...
+
+
